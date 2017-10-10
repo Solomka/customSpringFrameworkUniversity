@@ -1,21 +1,21 @@
 package application.classes;
 
 public class Bus implements Transport {
-    private String message;
-    
-    public Bus() {
-        message = "I am the Bus!";
-    }
+	private String message;
 
-    public String getMessage() {
-        return message;
-    }
+	public Bus() {
+		message = "I am the Bus!";
+	}
 
-    public void setMessage(final String message) {
-        this.message = message;
-    }
+	public String getMessage() {
+		return message;
+	}
 
-    public void getTransport() {
-        System.out.println(message);
-    }
+	public void setMessage(final String message) {
+		this.message = message;
+	}
+
+	public void getTransport() {
+		System.out.println(message);
+	}
 }

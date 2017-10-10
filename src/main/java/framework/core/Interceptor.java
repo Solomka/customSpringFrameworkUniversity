@@ -1,7 +1,6 @@
 package framework.core;
 
 public interface Interceptor {
-    
-    String interceptOutputString(String interceptedString);
-    
+
+	String interceptOutputString(String interceptedString);
 }
