@@ -15,19 +15,19 @@ import org.xml.sax.helpers.DefaultHandler;
 public class SaxParser extends DefaultHandler implements Parser {
 
 	String xmlFileName;
-	
+
 	List<Bean> beanList;
 	List<Bean> interceptorList;
-	
+
 	String tmpValue;
 	Bean beanTmp;
 
 	public SaxParser(String xmlFileName) {
 		this.xmlFileName = xmlFileName;
-		
+
 		beanList = new ArrayList<Bean>();
 		interceptorList = new ArrayList<Bean>();
-		
+
 		parseDocument();
 	}
 
@@ -36,9 +36,9 @@ public class SaxParser extends DefaultHandler implements Parser {
 
 		try {
 			SAXParser parser = factory.newSAXParser();
-			//sax parseer parses xml-document
+			// sax parseer parses xml-document
 			parser.parse(xmlFileName, this);
-			
+
 		} catch (ParserConfigurationException e) {
 			System.out.println("ParserConfig error");
 		} catch (SAXException e) {
@@ -66,16 +66,50 @@ public class SaxParser extends DefaultHandler implements Parser {
 		}
 
 		if (elementName.equalsIgnoreCase("constructor-arg")) {
-			beanTmp.getConstructorArg().add(attributes.getValue("type"));
-			beanTmp.getConstructorArg().add(attributes.getValue("value"));
+
+			if (attributes.getValue("ref") != null) {
+				for (int i = 0; i < beanList.size(); i++) {
+					if (beanList.get(i).name.equals(attributes.getValue("ref"))) {
+						beanTmp.getConstructorArg().add(beanList.get(i).className);
+						beanTmp.getConstructorArg().add(beanList.get(i).name);
+					}
+				}
+
+			} else {
+				beanTmp.getConstructorArg().add(attributes.getValue("type"));
+				beanTmp.getConstructorArg().add(attributes.getValue("value"));
+			}
 		}
 
 		if (elementName.equalsIgnoreCase("property")) {
 			beanTmp.getProperties().add(attributes.getValue("name"));
-			beanTmp.getProperties().add(attributes.getValue("value"));
+			if (attributes.getValue("ref") != null) {
+				beanTmp.getProperties().add(attributes.getValue("ref"));
+			}
+
+			else {
+				beanTmp.getProperties().add(attributes.getValue("value"));
+			}
 		}
 	}
 
+	/*
+	 * @Override public void startElement(String s, String s1, String
+	 * elementName, Attributes attributes) throws SAXException {
+	 * 
+	 * if (elementName.equalsIgnoreCase("bean") ||
+	 * elementName.equalsIgnoreCase("interceptor")) { beanTmp = new Bean();
+	 * beanTmp.setName(attributes.getValue("id"));
+	 * beanTmp.setClassName(attributes.getValue("class")); }
+	 * 
+	 * if (elementName.equalsIgnoreCase("constructor-arg")) {
+	 * beanTmp.getConstructorArg().add(attributes.getValue("type"));
+	 * beanTmp.getConstructorArg().add(attributes.getValue("value")); }
+	 * 
+	 * if (elementName.equalsIgnoreCase("property")) {
+	 * beanTmp.getProperties().add(attributes.getValue("name"));
+	 * beanTmp.getProperties().add(attributes.getValue("value")); } }
+	 */
 	@Override
 	public void endElement(String s, String s1, String element) throws SAXException {
 		if (element.equals("bean")) {

@@ -18,4 +18,12 @@ public class Bus implements Transport {
 	public void getTransport() {
 		System.out.println(message);
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Bus [message=").append(message).append("] ");
+		return builder.toString();
+	}
+
 }

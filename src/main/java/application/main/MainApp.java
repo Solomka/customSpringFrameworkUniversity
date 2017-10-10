@@ -11,6 +11,9 @@ import application.classes.Bus;
 import application.classes.Car;
 import application.classes.GreetingService;
 import application.classes.Transport;
+import application.hw1.CarWash;
+import application.hw1.CarWashWorker;
+import application.hw1.CarWashWorker;
 import framework.core.Autowiring;
 import framework.core.BeanFactory;
 import framework.core.GenericXmlApplicationContext;
@@ -193,6 +196,9 @@ public class MainApp {
 
 		BeanFactory factory = context.getBeanFactory();
 
+		/*
+		 * Example: Primitive Types constructor/setter/interface injection
+		 */
 		GreetingService greetingService = (GreetingService) factory.getBean("greetingService", GreetingService.class);
 		System.out.println(greetingService.getMessage());
 
@@ -204,6 +210,25 @@ public class MainApp {
 
 		Transport car = (Car) factory.getBean("car", Transport.class);
 		System.out.println(car.toString());
+		
+		/*
+		 * HW 1: Beans constructor/setter/interface injection
+		 */
+		
+		System.out.println("HW1");
+		
+		// bean constructor injection test
+		CarWash carWash = (CarWash) factory.getBean("carWash1", CarWash.class);
+		carWash.washCar();
+		
+		//bean setter injection test
+		CarWash carWash2 = (CarWash)factory.getBean("carWash2", CarWash.class);
+		carWash2.washCar();
+		
+		//bean interface injection test
+		CarWashWorker transportWashWorker = (CarWashWorker)factory.getBean("carWashWorker", CarWashWorker.class);
+		transportWashWorker.washCar();
+		
 
 		// ================
 		// ================ REFLECTION API DEMO
