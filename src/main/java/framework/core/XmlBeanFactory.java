@@ -149,18 +149,6 @@ public class XmlBeanFactory implements BeanFactory {
 		}
 	}*/
 
-	private void setupInterceptors(List<Bean> interceptorList) {
-		for (Bean b : interceptorList) {
-			try {
-				final Class<?> clazz = Class.forName(b.getClassName());
-				Object interceptor = clazz.getConstructor().newInstance();
-				interceptorTable.put(b.getName(), interceptor);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-
 	public Object getBean(String string) {
 		return beanTable.get(string);
 	}
@@ -173,5 +161,19 @@ public class XmlBeanFactory implements BeanFactory {
 	public Object[] getInterceptors() {
 		return (Object[]) interceptorTable.values().toArray();
 	}
+	
+	private void setupInterceptors(List<Bean> interceptorList) {
+		for (Bean b : interceptorList) {
+			try {
+				final Class<?> clazz = Class.forName(b.getClassName());
+				Object interceptor = clazz.getConstructor().newInstance();
+				interceptorTable.put(b.getName(), interceptor);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
+
+	
 
 }

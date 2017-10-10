@@ -8,34 +8,11 @@ import framework.core.XmlBeanDefinitionReader.ParserTypes;
 
 public class GenericXmlApplicationContext {
 
-	private static class ConfigurationException extends RuntimeException {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -2684645760336447485L;
-
-		public ConfigurationException(String e) {
-			super(e);
-		}
-	}
-
-	private static final Predicate<Class<?>> canInstantiate(Class<?> classToInstantiate) {
-		return testClass -> !testClass.isInterface() && classToInstantiate.isAssignableFrom(testClass);
-	}
-
-	private static final Predicate<Class<?>> isTheSameClassAs(Class<?> anotherClass) {
-		return testClass -> anotherClass.getName().equals(testClass.getName());
-	}
-
 	private static final String CONFIG_FILE_NAME = GenericXmlApplicationContext.class
 			.getResource("/GS_SpringXMLConfig.xml").getPath();
 
 	private final XmlBeanDefinitionReader reader;
 	private final BeanFactory beanFactory;
-
-	public XmlBeanDefinitionReader getReader() {
-		return reader;
-	}
 
 	private String xmlFileLocation;
 
@@ -119,19 +96,45 @@ public class GenericXmlApplicationContext {
 		beanFactory = new XmlBeanFactory(this.xmlFileLocation, reader);
 	}
 
-	public void setValidating(boolean validating) {
-		reader.setValidating(validating);
-	}
-
-	public void setParserType(ParserTypes parserType) {
-		reader.setParserType(parserType);
-	}
-
 	public void load(String xmlFileLocation) {
 		this.xmlFileLocation = xmlFileLocation;
 	}
 
 	public BeanFactory getBeanFactory() {
 		return beanFactory;
+	}
+
+	public XmlBeanDefinitionReader getReader() {
+		return reader;
+	}
+
+	public void setParserType(ParserTypes parserType) {
+		reader.setParserType(parserType);
+	}
+
+	public void setValidating(boolean validating) {
+		reader.setValidating(validating);
+	}
+
+	private static final Predicate<Class<?>> canInstantiate(Class<?> classToInstantiate) {
+		return testClass -> !testClass.isInterface() && classToInstantiate.isAssignableFrom(testClass);
+	}
+
+	private static final Predicate<Class<?>> isTheSameClassAs(Class<?> anotherClass) {
+		return testClass -> anotherClass.getName().equals(testClass.getName());
+	}
+
+	/*
+	 * Exception class
+	 */
+	private static class ConfigurationException extends RuntimeException {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2684645760336447485L;
+
+		public ConfigurationException(String e) {
+			super(e);
+		}
 	}
 }
