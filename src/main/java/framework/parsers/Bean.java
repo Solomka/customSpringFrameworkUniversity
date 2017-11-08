@@ -1,12 +1,15 @@
 package framework.parsers;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Bean {
-	String name;
-	String className;
-	ArrayList<String> constructorArg = new ArrayList<String>();
-	ArrayList<String> properties = new ArrayList<String>();
+	private String name;// id
+	private String className;
+	private String value;
+
+	private List<Bean> constructorArg = new ArrayList<>();
+	private List<PropertyBean> properties = new ArrayList<>();
 
 	public String getName() {
 		return name;
@@ -24,23 +27,32 @@ public class Bean {
 		this.className = className;
 	}
 
-	public ArrayList<String> getConstructorArg() {
+	public List<Bean> getConstructorArg() {
 		return constructorArg;
 	}
 
-	public void setConstructorArg(ArrayList<String> constructorArg) {
+	public void setConstructorArg(List<Bean> constructorArg) {
 		this.constructorArg = constructorArg;
 	}
 
-	public ArrayList<String> getProperties() {
+	public List<PropertyBean> getProperties() {
 		return properties;
 	}
 
-	public void setProperties(ArrayList<String> properties) {
+	public void setProperties(List<PropertyBean> properties) {
 		this.properties = properties;
 	}
 
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
 	public String toString() {
-		return name + " : " + className.toString() + constructorArg.toString() + ", " + properties.toString();
+		return name + " : " + (className != null ? className.toString() : "im not lucky") + constructorArg.toString()
+				+ ", " + properties.toString();
 	}
 }

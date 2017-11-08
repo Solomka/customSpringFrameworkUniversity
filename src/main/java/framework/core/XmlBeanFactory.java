@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import framework.parsers.Bean;
+import framework.parsers.PropertyBean;
 
 public class XmlBeanFactory implements BeanFactory {
 
@@ -17,137 +18,102 @@ public class XmlBeanFactory implements BeanFactory {
 		generateBeans(xbdr.getBeanList());
 		setupInterceptors(xbdr.getInterceptorList());
 	}
-	
-	private void generateBeans(List<Bean> beanList) {                
-        for (Bean b : beanList) {
-            try {
-                final Class<?> clazz = Class.forName(b.getClassName());
-                Constructor<?> ctor;
-                Object object;
-                
-                List<String> ca = b.getConstructorArg();
-                
-                if (!ca.isEmpty()) {
-                    
-                    Class<?>[] consClasses = new Class[ca.size() / 2];
-                    
-                    for (int i = 0, j = 0; i < ca.size(); i+=2) {
-                        if (ca.get(i) == null || ca.get(i).contentEquals("String")) {
-                            consClasses[j] = String.class;
-                        } else if (classLibrary.containsKey(ca.get(i))) { 
-                            consClasses[j] = getPrimitiveClassForName(ca.get(i));
-                        } else {
-                            consClasses[j] = Class.forName(ca.get(i));
-                        }
-                        j++;
-                    }
-                    ctor = clazz.getConstructor(consClasses);
-                    Object[] consArgs = new Object[consClasses.length];
-                    for (int i = 1, j = 0; i < ca.size(); i+=2) {
-                        if (consClasses[j].isPrimitive()){
-                            consArgs[j] = 
-                                    getWrapperClassValueForPrimitiveType(consClasses[j], ca.get(i));
-                        }
-                        else {
-                            //consArgs[j] = consClasses[j].cast(ca.get(i));
-                        	consArgs[j] = beanTable.get(ca.get(i));
-                        }
-                        j++;
-                    }
-                    object = ctor.newInstance(consArgs);
-                } else {
-                    ctor = clazz.getConstructor();
-                    object = ctor.newInstance();
-                }
-                
-                List<String> props = b.getProperties();
-                
-                if (!props.isEmpty()) {
 
-                    for (int i = 0; i < props.size(); i++) {
-                    	
-                        char first = Character.toUpperCase(props.get(i).charAt(0));
-                        String methodName = "set" + first + props.get(i).substring(1);
+	private Object createBean(Bean beanDefinition) {
+		try {
+			Object object = null;
 
-                    	Method method = null;
-                    	if (beanTable.containsKey(props.get(i+1))){
-                    		method = object.getClass().getMethod(methodName, 
-                                    new Class[] { beanTable.get(props.get(i+1)).getClass() }); 
-                    	}
-                    	else{
-                        method = object.getClass().getMethod(methodName, 
-                                new Class[] { props.get(i+1).getClass() }); 
-                    	}
-                        method.invoke(object, beanTable.get(props.get(i+1)));
-                        i++;
-                    }
-                }
+			if (!beanDefinition.getProperties().isEmpty()) {
+				Class<?> clazz = Class.forName(beanDefinition.getClassName());
+				Constructor<?> ctor = clazz.getConstructor();
+				object = ctor.newInstance();
 
-                beanTable.put(b.getName(), object);
-            } catch(Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
+				for (PropertyBean propertyBean : beanDefinition.getProperties()) {
 
-	/*private void generateBeans(List<Bean> beanList) {
-		for (Bean b : beanList) {
-			try {
-				final Class<?> clazz = Class.forName(b.getClassName());
-				Constructor<?> ctor;
-				Object object;
+					char first = Character.toUpperCase(propertyBean.getName().charAt(0));
+					String methodName = "set" + first + propertyBean.getName().substring(1);
 
-				List<String> ca = b.getConstructorArg();
-
-				if (!ca.isEmpty()) {
-
-					Class<?>[] consClasses = new Class[ca.size() / 2];
-
-					for (int i = 0, j = 0; i < ca.size(); i += 2) {
-						if (ca.get(i) == null || ca.get(i).contentEquals("String")) {
-							consClasses[j] = String.class;
-						} else if (classLibrary.containsKey(ca.get(i))) {
-							consClasses[j] = getPrimitiveClassForName(ca.get(i));
-						} else {
-							consClasses[j] = Class.forName(ca.get(i));
-						}
-						j++;
+					Object createdBean;
+					if (propertyBean.getBean().getName() != null) {
+						// bean should exist in beantable
+						createdBean = beanTable.get(propertyBean.getBean().getName());
+					} else {
+						// createBean
+						createdBean = createBean(propertyBean.getBean());
 					}
-					ctor = clazz.getConstructor(consClasses);
-					Object[] consArgs = new Object[consClasses.length];
-					for (int i = 1, j = 0; i < ca.size(); i += 2) {
-						if (consClasses[j].isPrimitive()) {
-							consArgs[j] = getWrapperClassValueForPrimitiveType(consClasses[j], ca.get(i));
-						} else {
-							consArgs[j] = consClasses[j].cast(ca.get(i));
-						}
-						j++;
+
+					Class<?> propertyClazz = getClassObject(propertyBean.getBean().getClassName());
+					Method method = object.getClass().getMethod(methodName, new Class[] { propertyClazz });
+					method.invoke(object, createdBean);
+				}
+			} else if (!beanDefinition.getConstructorArg().isEmpty()) {
+				Class<?> clazz = Class.forName(beanDefinition.getClassName());
+				Class<?>[] consClasses = new Class[beanDefinition.getConstructorArg().size()];
+				Object[] consArgs = new Object[beanDefinition.getConstructorArg().size()];
+
+				for (int i = 0; i < beanDefinition.getConstructorArg().size(); i++) {
+					Bean constructorBean = beanDefinition.getConstructorArg().get(i);
+					consClasses[i] = getClassObject(constructorBean.getClassName());
+
+					// real object that has the spec type
+					Object createdBean;
+					if (constructorBean.getName() != null) {
+						// bean should exist in beantable
+						createdBean = beanTable.get(constructorBean.getName());
+					} else {
+						System.out.println(constructorBean);
+						// createBean
+						createdBean = createBean(constructorBean);
 					}
-					object = ctor.newInstance(consArgs);
+					consArgs[i] = createdBean;
+				}
+
+				Constructor<?> ctor = clazz.getConstructor(consClasses);
+				object = ctor.newInstance(consArgs);
+
+			} else if (beanDefinition.getValue() != null) {
+				if (beanDefinition.getClassName() == null || beanDefinition.getClassName().contains("String")) {
+					object = beanDefinition.getValue();
 				} else {
-					ctor = clazz.getConstructor();
-					object = ctor.newInstance();
+					Class<?> primitiveClass = getPrimitiveClassForName(beanDefinition.getClassName());
+					object = getWrapperClassValueForPrimitiveType(primitiveClass, beanDefinition.getValue());
 				}
+			} else {
+				Class<?> clazz = Class.forName(beanDefinition.getClassName());
+				Constructor<?> ctor = clazz.getConstructor();
+				object = ctor.newInstance();
+			}
 
-				List<String> props = b.getProperties();
+			if (beanDefinition.getName() != null) {
+				beanTable.put(beanDefinition.getName(), object);
+			}
+			return object;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
 
-				if (!props.isEmpty()) {
-					for (int i = 0; i < props.size(); i++) {
-						char first = Character.toUpperCase(props.get(i).charAt(0));
-						String methodName = "set" + first + props.get(i).substring(1);
-						Method method = object.getClass().getMethod(methodName,
-								new Class[] { props.get(i + 1).getClass() });
-						method.invoke(object, props.get(i + 1));
-						i++;
-					}
-				}
-
-				beanTable.put(b.getName(), object);
-			} catch (Exception ex) {
-				ex.printStackTrace();
+	private Class<?> getClassObject(String name) {
+		if (name == null || name.contentEquals("String")) {
+			return String.class;
+		} else if (classLibrary.containsKey(name)) {
+			return getPrimitiveClassForName(name);
+		} else {
+			try {
+				return Class.forName(name);
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 		}
-	}*/
+	}
+
+	private void generateBeans(List<Bean> beanList) {
+		for (Bean b : beanList) {
+			createBean(b);
+		}
+	}
 
 	public Object getBean(String string) {
 		return beanTable.get(string);
@@ -161,7 +127,7 @@ public class XmlBeanFactory implements BeanFactory {
 	public Object[] getInterceptors() {
 		return (Object[]) interceptorTable.values().toArray();
 	}
-	
+
 	private void setupInterceptors(List<Bean> interceptorList) {
 		for (Bean b : interceptorList) {
 			try {
@@ -173,7 +139,5 @@ public class XmlBeanFactory implements BeanFactory {
 			}
 		}
 	}
-
-	
 
 }
